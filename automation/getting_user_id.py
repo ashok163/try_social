@@ -2,13 +2,14 @@
 
 # from selenium.webdriver.chrome.options import Options
 
-# import os
+import os
 
-# import pickle
+import pickle
 
-# from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait
 
 from selenium.webdriver.chrome.options import Options as ChromeOptions
+
 chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
 opts = ChromeOptions()
 opts.binary_location = chrome_bin
