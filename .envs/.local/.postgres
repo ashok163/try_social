@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=social_automation
+POSTGRES_USER=xFdZaAFdTvKPLrLfFhmGOgolgCGyryvk
+POSTGRES_PASSWORD=LQgY6yPVzf4mUP35h7bGIfNDmjPeoSThxVgGQdQPEEM7bE9c2pOUy5Djp1Z5octQ
