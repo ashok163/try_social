@@ -20,7 +20,7 @@ def add_followers(celeb_user_name):
     tu = TargetUsers(users=celeb_user_name, login_user=queryset)
     tu.save()
 
-    u_id = getting_userd_id.used_id_from_username(
+    u_id = getting_user_id.used_id_from_username(
         celeb_user_name,
         username,
         password)

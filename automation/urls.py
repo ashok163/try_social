@@ -22,7 +22,7 @@ app_name = "automation"
 
 urlpatterns = [
     path("", view=login_view, name="list"),
-    path("~welcome/", view=retrieve_followers, name="welcome"),
-    url("~success/", view=like_media, name="like-media"),
-    url("~live_like/", view=live_likes_hashtags, name="like-hash-tags"),
+    path("welcome/", view=retrieve_followers, name="welcome"),
+    url("success/", view=like_media, name="like-media"),
+    url("live_like/", view=live_likes_hashtags, name="like-hash-tags"),
 ]
