@@ -13,7 +13,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
 opts = ChromeOptions()
 opts.binary_location = chrome_bin
-driver = webdriver.Chrome(executable_path="chromedriver", chrome_options=opts)
+driver = webdriver.Chrome(chrome_options=opts)
 
 # chrome_options = Options()
 
