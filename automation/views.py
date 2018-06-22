@@ -7,7 +7,7 @@ from . import getting_user_id
 from . import user_followers
 from InstagramAPI import InstagramAPI
 import json
-from django.contrib import messages
+from django.contrib import messages #just a comment
 
 
 def add_followers(celeb_user_name):
