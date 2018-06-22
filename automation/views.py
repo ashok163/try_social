@@ -55,7 +55,7 @@ def login_view(request):
     if form.errors:
         print(form.errors)
     else:
-        return HttpResponseRedirect('/welcome/')
+        return HttpResponseRedirect('/automation/welcome/')
     template_name = 'automation/index.html'
     context = {}
     return render(request, template_name, context)
