@@ -1,6 +1,6 @@
 from selenium import webdriver
 
-from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.chrome.options import Options
 
 import os
 
@@ -8,16 +8,22 @@ import pickle
 
 from selenium.webdriver.support.ui import WebDriverWait
 
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 
-chrome_options = Options()
+chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
+opts = ChromeOptions()
+opts.binary_location = chrome_bin
+driver = webdriver.Chrome(executable_path="chromedriver", chrome_options=opts)
 
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--window-size=1920x1080")
-chrome_driver = os.getcwd() + "/chromedriver"
+# chrome_options = Options()
 
-# go to Google and click the I'm Feeling Lucky button
-driver = webdriver.Chrome(chrome_options=chrome_options,
-                          executable_path=chrome_driver)
+# chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--window-size=1920x1080")
+# chrome_driver = os.getcwd() + "/chromedriver"
+
+# # go to Google and click the I'm Feeling Lucky button
+# driver = webdriver.Chrome(chrome_options=chrome_options,
+#                           executable_path=chrome_driver)
 
 
 def used_id_from_username(insta_user_name, username, password):

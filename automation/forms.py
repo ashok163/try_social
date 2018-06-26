@@ -7,10 +7,10 @@ class LoginForm(forms.Form):
 
 
 class WelcomePage(forms.Form):
-    celeb_user_name = forms.CharField(widget=forms.Textarea)
+    celeb_user_name = forms.CharField(widget=forms.Textarea, required=False)
     #celeb_followers = forms.CharField( widget=forms.Textarea(attrs={'rows': 5, 'cols': 100}))
     celeb_followers = forms.CharField(max_length=300, required=False)
 
-    hash_tag = forms.CharField(max_length=120)
+    hash_tag = forms.CharField(max_length=120, required=False)
 
     hash_tag_users = forms.CharField(max_length=300, required=False)

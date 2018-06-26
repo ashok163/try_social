@@ -239,3 +239,15 @@ SOCIALACCOUNT_ADAPTER = 'social_automation.users.adapters.SocialAccountAdapter'
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240 # higher than the count of fields
+# #I have to define celery settings here.
+
+# # Celery settings
+
+# CELERY_BROKER_URL = 'amqp://guest:guest@localhost//'
+
+# #: Only add pickle to this list if your broker is secured
+# #: from unwanted access (see userguide/security.html)
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
+# CELERY_TASK_SERIALIZER = 'json'

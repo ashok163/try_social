@@ -1,3 +1,4 @@
+import time
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from .forms import WelcomePage, LoginForm
@@ -7,7 +8,7 @@ from . import getting_user_id
 from . import user_followers
 from InstagramAPI import InstagramAPI
 import json
-from django.contrib import messages #just a comment
+from django.contrib import messages
 
 
 def add_followers(celeb_user_name):
@@ -16,30 +17,54 @@ def add_followers(celeb_user_name):
 
     username = queryset.username
     password = queryset.password
+    print(celeb_user_name)
+    target_user = TargetUsers(users=celeb_user_name, login_user=queryset)
+    target_user.save()
 
-    tu = TargetUsers(users=celeb_user_name, login_user=queryset)
-    tu.save()
+    print(target_user)
 
     u_id = getting_user_id.used_id_from_username(
         celeb_user_name,
         username,
         password)
+
     api = InstagramAPI(username, password)
     api.login()
+
+    # maxid = ''
+    # has_more_value = True
+    #
+    # while has_more_value:
+    #     #print("Hey I am here!")
+    #     api.getUserFollowers(u_id, maxid)  # (userid,maxid)
+    #     for i in api.LastJson['users']:
+    #         is_private = i['is_private']
+    #         pk = i['pk']
+    #         username = i['username']
+    #         print(username)
+    #
+    #         Followers.objects.create(
+    #             targetusers=target_user,
+    #             uname_id=username,
+    #             u_id=pk,
+    #             is_public=not is_private)
+    #         #followerlist.append(i['pk'])
+    #     if not api.LastJson['big_list']:
+    #         break
+    #     maxid = api.LastJson['next_max_id']
+    #     time.sleep(1)
 
     followers = user_followers.getTotalFollowers(api, u_id)
 
     for follower in followers:
         is_private = follower['is_private']
-        if not is_private:
-            pk = follower['pk']
-            username = follower['username']
-            if pk and username:
-                Followers.objects.create(
-                    targetusers=tu,
-                    uname_id=username,
-                    u_id=pk,
-                    is_public=True)
+        pk = follower['pk']
+        username = follower['username']
+        Followers.objects.create(
+            targetusers=target_user,
+            uname_id=username,
+            u_id=pk,
+            is_public= not is_private)
 
 
 def login_view(request):
@@ -63,19 +88,22 @@ def login_view(request):
 
 def retrieve_followers(request):
     context = ''
-    form = WelcomePage(request.POST or None)
+    #form = WelcomePage(request.GET or None)
 
     followers_string = ''
     hash_tag_users_string = ''
     celeb_user_name = ''
     hash_tag = ''
 
-    print(form.is_valid())
+    print(request.GET.get('celeb_user_name'))
+    print(request.GET)
+    # print(form.is_valid())
+    #
+    # if form.is_valid():
+    if request.GET and request.GET['celeb_user_name']:
 
-    if form.is_valid():
-
-        celeb_user_name = form.cleaned_data['celeb_user_name']
-        hash_tag = form.cleaned_data['hash_tag']
+        celeb_user_name = request.GET['celeb_user_name']
+        hash_tag = request.GET['hash_tag']
 
         add_followers(celeb_user_name)
 
@@ -87,10 +115,11 @@ def retrieve_followers(request):
             followers_string += follower.uname_id + ', '
 
 
-        # context = {
-        #     'follower_strings': followers_string,
-        #     'celeb_user_name': celeb_user_name
-        #     }
+            # context = {
+            #     'follower_strings': followers_string,
+            #     'celeb_user_name': celeb_user_name
+            #     }
+    elif request.GET and request.GET['hash_tag']:
 
         add_hash_tag_users(hash_tag)
 
@@ -101,10 +130,10 @@ def retrieve_followers(request):
         for follower in queryset:
             hash_tag_users_string += follower.user_name + ', '
 
-    if form.errors:
-        print(form.errors)
+    # if form.errors:
+    #     print(form.errors)
 
-    template_name = 'automation/welcome.html'
+    template_name = 'automation/dashboard.html'
     return render(
         request,
         template_name,
@@ -134,33 +163,39 @@ def like_media(request):
     queryset = Followers.objects.filter(targetusers=target_user_obj)
 
     likes_count = 0
-
+    count = 0
     for follower in queryset:
-        print(follower.u_id)
+        count += 1
+        if count % 5 == 0:
 
-        try:
-            api.getTotalUserFeed(follower.u_id)
+            if follower.is_public:
+                try:
+                    api.getTotalUserFeed(follower.u_id)
 
-            update = follower.uname_id + " \'s " + "recent posts have been liked"
+                    update = follower.uname_id + " \'s " + "recent posts have been liked"
 
-            messages.add_message(request, messages.INFO, update)
+                    messages.add_message(request, messages.INFO, update)
 
-            i = 0
-            for user in api.getTotalUserFeed(follower.u_id):
-                api.like(user['id'])
-                i += 1
-                if i == 4:
-                    break
+                    i = 0
+                    for user in api.getTotalUserFeed(follower.u_id):
+                        api.like(user['id'])
+                        i += 1
+                        if i == 4:
+                            break
 
-            likes_count += 4
+                    likes_count += 4
 
-            if likes_count > 15:
-                break
+                    if likes_count > 17:
+                        break
 
-        except:
+                except:
 
-            update = "Can't like " + follower.uname_id + " \'s photos"
-            messages.add_message(request, messages.INFO, update)
+                    update = "Can't like " + follower.uname_id + " \'s photos"
+                    messages.add_message(request, messages.INFO, update)
+            else:
+                api.follow(follower.u_id)
+        else:
+            continue
 
     template_name = 'automation/success.html'
     return render(request, template_name, {})
@@ -228,7 +263,7 @@ def live_likes_hashtags(request):
 
         print(follower.user_name)
 
-        u_id = getting_userd_id.used_id_from_username(follower.user_name, username, password)
+        u_id = getting_user_id.used_id_from_username(follower.user_name, username, password)
 
         api.getTotalUserFeed(u_id)
 
