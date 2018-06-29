@@ -24,6 +24,7 @@
 
 </style>
 
+
 </head>
 
 
@@ -39,7 +40,7 @@
           <!-- Text input-->
           <div class="form-group">
             <label for="insta_user_name">Instagram Username</label>
-              <input type="text" id="insta_user_name" id="insta_user_name" name="celeb_user_name" placeholder="Celeb User" value="{{ celeb_user }}" class="form-control">
+              <input type="text" id="insta_user_name" name="celeb_user_name" placeholder="Celeb User" value="{{ celeb_user }}" class="form-control">
           </div>
 
 
@@ -50,7 +51,7 @@
 
             <div class="slidecontainer">
               <label for="myRange">Likes Per Hour</label>
-              <input type="range" min="1" max="40" value="20" class="slider" id="myRange">
+              <input name="likes_per_hour" type="range" min="1" max="40" value="20" class="slider" id="myRange">
                <p>Likes: <span id="demo"></span></p>
             </div>
 
@@ -64,7 +65,6 @@
             </div>
             </div>
 
-          </div>
 
         </fieldset>
       </form>
@@ -72,9 +72,10 @@
 </div><!-- /.row -->
 
 <div class="container">
-  <div class="btn-group" style="width:100%">
-      <a href="/automation/success"><button style="width:50%">Like Targeted Users</button></a>
-      <a href="/automation/success"><button style="width:50%">Like HashTag Users</button></a>
+  <div class="btn-group" style="text-align: center">
+      <!--<a href="/automation/success"><button style="width:50%">Like Targeted Users</button></a>-->
+      <!--<a href="/automation/success"><button style="width:50%">Like HashTag Users</button></a>-->
+      <button type="button" class="btn btn-success">Start</button>
   </div>
 </div>
 
@@ -110,6 +111,29 @@
     });
   });
   </script>
+
+   <script>
+   $(document).ready(function(){
+     // var insta_user_name = $('#insta_user_name').val();
+     // var htag = $(#hash_tag).val();
+     // var lkh = $(#myRange).val();
+     // var from_day = $(#from).val();
+     // var to_day = $(#to).val();
+     //var insta_user_name = document.getElementById('insta')
+
+     $("button").click(function(){
+          $.get("start", {  celeb_user_name: $('#insta_user_name').val(),
+                            hash_tag: $('#hash_tag').val(),
+                            likes_per_hour: $('#myRange').val(),
+                            from_date: $('#from').val(),
+                            to_date:$('#to').val()});
+
+                          }
+                );
+     //alert("You activity has started successfully");
+   });
+  </script>
+
 </body>
 
 </html>

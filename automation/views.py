@@ -1,14 +1,20 @@
-import time
+from datetime import datetime
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from .forms import WelcomePage, LoginForm
-from .models import Followers, TargetUsers, LoginData, TargetHashTags, TargetedHashTagUsers
+from .models import (Followers,
+                     TargetUsers,
+                     LoginData,
+                     TargetHashTags,
+                     TargetedHashTagUsers,
+                     UserConfigurationsState)
 from django.contrib.auth import authenticate, login
 from . import getting_user_id
 from . import user_followers
 from InstagramAPI import InstagramAPI
 import json
 from django.contrib import messages
+from django.http import HttpResponse
 
 
 def add_followers(celeb_user_name):
@@ -86,66 +92,8 @@ def login_view(request):
     return render(request, template_name, context)
 
 
-def retrieve_followers(request):
-    context = ''
-    #form = WelcomePage(request.GET or None)
+def like_media(likes_per_hour):
 
-    followers_string = ''
-    hash_tag_users_string = ''
-    celeb_user_name = ''
-    hash_tag = ''
-
-    print(request.GET.get('celeb_user_name'))
-    print(request.GET)
-    # print(form.is_valid())
-    #
-    # if form.is_valid():
-    if request.GET and request.GET['celeb_user_name']:
-
-        celeb_user_name = request.GET['celeb_user_name']
-        hash_tag = request.GET['hash_tag']
-
-        add_followers(celeb_user_name)
-
-        queryset = Followers.objects.all()
-
-        followers_string = ''
-
-        for follower in queryset:
-            followers_string += follower.uname_id + ', '
-
-
-            # context = {
-            #     'follower_strings': followers_string,
-            #     'celeb_user_name': celeb_user_name
-            #     }
-    elif request.GET and request.GET['hash_tag']:
-
-        add_hash_tag_users(hash_tag)
-
-        queryset = TargetedHashTagUsers.objects.all()
-
-        hash_tag_users_string = ''
-
-        for follower in queryset:
-            hash_tag_users_string += follower.user_name + ', '
-
-    # if form.errors:
-    #     print(form.errors)
-
-    template_name = 'automation/dashboard.html'
-    return render(
-        request,
-        template_name,
-        {'follower_strings': followers_string,
-         'celeb_user': celeb_user_name,
-         'hash_tag': hash_tag,
-         'hash_tag_users_string': hash_tag_users_string
-         }
-    )
-
-
-def like_media(request):
     login_obj = LoginData.objects.all().first()
     username = login_obj.username
     password = login_obj.password
@@ -163,43 +111,27 @@ def like_media(request):
     queryset = Followers.objects.filter(targetusers=target_user_obj)
 
     likes_count = 0
-    count = 0
+
     for follower in queryset:
-        count += 1
-        if count % 5 == 0:
+            likes_count = 0
+            if follower.is_public and not follower.is_processed:
+                api.getTotalUserFeed(follower.u_id)
+                i = 0
+                for user in api.getTotalUserFeed(follower.u_id):
+                    print(follower.u_id + ' \s ' + user['id'] + " is liked")
+                    #api.like(user['id'])
+                    follower.is_processed = True
+                    follower.save(update_fields=["is_processed"])
 
-            if follower.is_public:
-                try:
-                    api.getTotalUserFeed(follower.u_id)
-
-                    update = follower.uname_id + " \'s " + "recent posts have been liked"
-
-                    messages.add_message(request, messages.INFO, update)
-
-                    i = 0
-                    for user in api.getTotalUserFeed(follower.u_id):
-                        api.like(user['id'])
-                        i += 1
-                        if i == 4:
-                            break
-
-                    likes_count += 4
-
-                    if likes_count > 17:
+                    i += 1
+                    likes_count += 1
+                    if i > 4:
                         break
-
-                except:
-
-                    update = "Can't like " + follower.uname_id + " \'s photos"
-                    messages.add_message(request, messages.INFO, update)
             else:
                 api.follow(follower.u_id)
-        else:
-            continue
 
-    template_name = 'automation/success.html'
-    return render(request, template_name, {})
-
+            if likes_count > 4:
+                break
 
 def add_hash_tag_users(hash_tag):
     login_obj = LoginData.objects.all().first()
@@ -242,7 +174,7 @@ def add_hash_tag_users(hash_tag):
         TargetedHashTagUsers.objects.create(targethashtags=tags, user_name=user)
 
 
-def live_likes_hashtags(request):
+def live_likes_hashtags(likes_per_hour):
     login_obj = LoginData.objects.all().first()
     username = login_obj.username
     password = login_obj.password
@@ -266,18 +198,59 @@ def live_likes_hashtags(request):
         u_id = getting_user_id.used_id_from_username(follower.user_name, username, password)
 
         api.getTotalUserFeed(u_id)
-
         i = 0
+        #Later I should change to implement max_id of 5 to make it efficient
         for user in api.getTotalUserFeed(u_id):
             api.like(user['id'])
             i += 1
-            if i == 4:
+            likes_count += 1
+            if i > 3:
                 break
 
-        likes_count += 4
-
-        if likes_count > 15:
+        if likes_count > likes_per_hour:
             break
 
-    template_name = 'automation/live_likes.html'
-    return render(request, template_name, {})
+
+def calling_actions():
+    queryset = UserConfigurationsState.objects.all()
+    celeb_user_names = ''
+    hash_tags = ''
+    likes_per_hour = ''
+
+    for item in queryset:
+        celeb_user_names = item.celeb_user_name
+        hash_tags = item.hash_tag
+        likes_per_hour = item.likes_per_hour
+
+    add_followers(celeb_user_names)
+
+    add_hash_tag_users(hash_tags)
+
+    like_media(int(likes_per_hour))
+
+    return None
+
+
+def user_preferences(request):
+
+    if len(request.GET) > 0:
+
+        celeb_user_names = request.GET.get('celeb_user_name')
+        hash_tags = request.GET.get('hash_tag')
+        likes_per_hour = request.GET.get('likes_per_hour')
+        print(request.GET.get('from_date'))
+        from_date = datetime.strptime(request.GET.get('from_date'), '%m/%d/%Y')
+        to_date = datetime.strptime(request.GET.get('to_date'), '%m/%d/%Y')
+
+        UserConfigurationsState.objects.create(celeb_user_name=celeb_user_names,
+                                               hash_tag=hash_tags,
+                                               likes_per_hour=likes_per_hour,
+                                               from_date=from_date,
+                                               to_date=to_date)
+        # add_followers(celeb_user_names)
+        # add_hash_tag_users(hash_tags)
+        # like_media(likes_per_hour)
+
+    return HttpResponse(None)
+
+

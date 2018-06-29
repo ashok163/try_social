@@ -16,13 +16,15 @@ Including another URLconf
 from django.urls import include, path
 from django.contrib import admin
 from django.conf.urls import url
-from .views import login_view, retrieve_followers, like_media, live_likes_hashtags
+from .views import login_view, like_media, live_likes_hashtags, user_preferences
 
 app_name = "automation"
 
 urlpatterns = [
     path("", view=login_view, name="list"),
-    path("welcome/", view=retrieve_followers, name="welcome"),
+    #path("welcome/", view=retrieve_followers, name="welcome")
+    path("welcome/", view=user_preferences, name="dashboard"),
     url("success/", view=like_media, name="like-media"),
     url("live_like/", view=live_likes_hashtags, name="like-hash-tags"),
+    url("start/", view=user_preferences, name="start")
 ]
