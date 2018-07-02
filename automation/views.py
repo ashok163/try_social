@@ -199,7 +199,6 @@ def live_likes_hashtags(likes_per_hour):
 
         api.getTotalUserFeed(u_id)
         i = 0
-        #Later I should change to implement max_id of 5 to make it efficient
         for user in api.getTotalUserFeed(u_id):
             api.like(user['id'])
             i += 1
@@ -247,10 +246,9 @@ def user_preferences(request):
                                                likes_per_hour=likes_per_hour,
                                                from_date=from_date,
                                                to_date=to_date)
-        # add_followers(celeb_user_names)
-        # add_hash_tag_users(hash_tags)
-        # like_media(likes_per_hour)
+        calling_actions()
 
-    return HttpResponse(None)
+    template_name = 'automation/dashboard.html'
+    return render(request, template_name)
 
 
